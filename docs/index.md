@@ -1,40 +1,45 @@
-# SPARTAN Documentation
+﻿# SPARTAN Documentation
 
 Welcome to the SPARTAN framework documentation.
 
 ## Contents
 
-- [Getting Started](getting_started.md)
-- [API Reference](api_reference.md)
-- [Algorithms](algorithms.md)
-- [Examples](examples.md)
+* [Getting Started](getting_started.md)
+* [API Reference](api_reference.md)
+* [Algorithms](algorithms.md)
+* [Examples](examples.md)
 
 ## Overview
 
 SPARTAN (Secure Privacy-Adaptive Reasoning with Test-time Attack Neutralization) is a unified framework for detecting and defending against mechanistic privacy attacks in Reasoning Large Language Models.
 
+## Key Features
+
+- **MPLQ**: Mechanistic Privacy Leakage Quantification for detecting privacy risks
+- **RAAS**: Reasoning-Aware Adaptive Sanitization for applying targeted defenses
+- **RPPO**: Reasoning-Privacy Pareto Optimization for balancing utility and privacy
+- **Attack Suite**: NLBA, SMVA, and MVNA attacks for comprehensive evaluation
+
 ## Quick Links
 
-- [GitHub Repository](https://github.com/hmshujaatzaheer/spartan-framework)
-- [PyPI Package](https://pypi.org/project/spartan-framework/)
-- [Issue Tracker](https://github.com/hmshujaatzaheer/spartan-framework/issues)
+* [GitHub Repository](https://github.com/hmshujaatzaheer/spartan-framework)
+* [PyPI Package](https://pypi.org/project/spartan-framework/)
+* [Issue Tracker](https://github.com/hmshujaatzaheer/spartan-framework/issues)
 
-## Core Components
+## Installation
+```bash
+pip install spartan-framework
+```
 
-### MPLQ (Mechanistic Privacy Leakage Quantification)
-Detects privacy leakage through TTC mechanisms using:
-- PRM score distribution analysis
-- Vote concentration metrics
-- MCTS value network deviation
+## Quick Example
+```python
+from spartan import SPARTAN
+from spartan.models import MockReasoningLLM
 
-### RAAS (Reasoning-Aware Adaptive Sanitization)
-Applies adaptive defense based on detected risk:
-- Feature-selective PRM noise injection
-- Vote distribution flattening
-- MCTS value perturbation
+llm = MockReasoningLLM()
+spartan = SPARTAN(llm)
+result = spartan.process("What is 2 + 2?")
 
-### RPPO (Reasoning-Privacy Pareto Optimization)
-Optimizes defense parameters for best privacy-utility tradeoff:
-- UCB bandit for arm selection
-- Multi-objective reward function
-- Pareto front tracking
+print(f"Risk Score: {result.risk_score:.4f}")
+print(f"Defense Applied: {result.defense_applied}")
+```

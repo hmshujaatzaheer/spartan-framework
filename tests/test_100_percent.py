@@ -1,4 +1,4 @@
-﻿"""
+"""
 Final 100% Coverage Tests
 
 Targeting exact uncovered lines from coverage report.

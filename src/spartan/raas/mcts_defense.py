@@ -226,3 +226,6 @@ class MCTSDefense:
         noise = np.random.normal(0, noise_std)
         perturbed = float(np.clip(value + noise, 0, 1))
         return perturbed
+
+
+# Last updated: 2026-01-15

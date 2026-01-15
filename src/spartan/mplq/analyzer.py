@@ -294,3 +294,6 @@ class MPLQ:
             distribution: Reference distribution from non-member data
         """
         self.prm_analyzer.set_reference_distribution(distribution)
+
+
+# Last updated: 2026-01-15

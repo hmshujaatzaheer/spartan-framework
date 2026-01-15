@@ -258,3 +258,6 @@ class SPARTAN:
     def history(self) -> List[Dict[str, Any]]:
         """Get processing history."""
         return self._history.copy()
+
+
+# Last updated: 2026-01-15

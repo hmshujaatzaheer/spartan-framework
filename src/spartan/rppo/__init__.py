@@ -17,3 +17,5 @@ __all__ = [
     "UCBBandit",
     "ParetoFront",
 ]
+
+# Last updated: 2026-01-15

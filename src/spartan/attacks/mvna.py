@@ -189,3 +189,6 @@ class MVNAAttack(BaseAttack):
         leakage_signals["combined_signal"] = signal
 
         return signal, leakage_signals
+
+
+# Last updated: 2026-01-15

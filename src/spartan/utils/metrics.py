@@ -1,4 +1,4 @@
-﻿"""
+"""
 Evaluation Metrics
 
 Metrics for evaluating attack and defense performance.
@@ -226,3 +226,6 @@ def compute_precision_recall_curve(
         recalls.append(recall)
 
     return precisions, recalls, thresholds.tolist()
+
+
+# Last updated: 2026-01-15

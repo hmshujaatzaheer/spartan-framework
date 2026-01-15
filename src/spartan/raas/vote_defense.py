@@ -277,3 +277,6 @@ class VoteDefense:
             rewards.append(reward)
 
         return np.array(rewards)
+
+
+# Last updated: 2026-01-15

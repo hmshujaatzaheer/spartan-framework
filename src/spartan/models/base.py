@@ -115,3 +115,6 @@ class BaseReasoningLLM(ABC):
     def uses_mcts(self) -> bool:
         """Check if model uses MCTS."""
         return False
+
+
+# Last updated: 2026-01-15

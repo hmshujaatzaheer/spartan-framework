@@ -19,3 +19,5 @@ __all__ = [
     "VoteDefense",
     "MCTSDefense",
 ]
+
+# Last updated: 2026-01-15

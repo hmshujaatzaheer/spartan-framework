@@ -166,3 +166,6 @@ class BaseAttack(ABC):
     def name(self) -> str:
         """Get attack name."""
         return self._attack_name
+
+
+# Last updated: 2026-01-15

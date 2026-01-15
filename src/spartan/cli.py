@@ -230,3 +230,5 @@ def _cmd_config(args: argparse.Namespace) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+# Last updated: 2026-01-15

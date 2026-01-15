@@ -200,3 +200,6 @@ class SMVAAttack(BaseAttack):
         )
 
         return float(np.clip(gini, 0, 1))
+
+
+# Last updated: 2026-01-15

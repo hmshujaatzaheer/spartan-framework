@@ -263,3 +263,6 @@ class PRMLeakageAnalyzer:
     def get_reference_distribution(self) -> np.ndarray:
         """Get current reference distribution."""
         return self._reference_distribution.copy()
+
+
+# Last updated: 2026-01-15

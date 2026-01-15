@@ -256,3 +256,6 @@ class ParetoFront:
         closest_idx = int(np.argmin(distances))
 
         return (self._points[closest_idx], self._params[closest_idx])
+
+
+# Last updated: 2026-01-15

@@ -216,3 +216,6 @@ class DatasetLoader:
             labels=labels,
             metadata={"seed": seed, "synthetic": True},
         )
+
+
+# Last updated: 2026-01-15

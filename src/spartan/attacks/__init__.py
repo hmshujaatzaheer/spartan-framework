@@ -20,3 +20,5 @@ __all__ = [
     "SMVAAttack",
     "MVNAAttack",
 ]
+
+# Last updated: 2026-01-15

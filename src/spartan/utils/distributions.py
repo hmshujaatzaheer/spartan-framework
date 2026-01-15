@@ -244,3 +244,6 @@ def renyi_divergence(
     renyi = np.log(term) / (alpha - 1)
 
     return float(renyi)
+
+
+# Last updated: 2026-01-15

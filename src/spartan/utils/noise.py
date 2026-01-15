@@ -233,3 +233,6 @@ def adaptive_noise(
         raise ValueError(f"Unknown mechanism: {mechanism}")
 
     return noise
+
+
+# Last updated: 2026-01-15

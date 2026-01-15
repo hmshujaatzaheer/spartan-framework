@@ -188,3 +188,6 @@ class UCBBandit:
 
         # Higher bonus = more exploration
         return float(np.clip(exploration_bonus / 2, 0, 1))
+
+
+# Last updated: 2026-01-15

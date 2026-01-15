@@ -186,7 +186,7 @@ class TestMCTSDefenseFull:
     """Full coverage tests for MCTS defense."""
 
     def test_empty_tree(self):
-        """Test with empty tree."""
+        """Test with empty tree - no values key."""
         defense = MCTSDefense()
         result = defense.apply(
             mcts_tree={},
@@ -195,12 +195,27 @@ class TestMCTSDefenseFull:
             epsilon=0.5,
         )
         assert result["applied"] is False
+        assert result["error"] == "no_values_in_tree"
 
     def test_tree_with_values_list(self):
         """Test with tree containing values list."""
         defense = MCTSDefense()
+        tree = {"values": [0.8, 0.7, 0.9, 0.6]}
+        result = defense.apply(
+            mcts_tree=tree,
+            mcts_leakage=0.6,
+            threshold=0.3,
+            epsilon=0.5,
+        )
+        assert result["applied"] is True
+        assert "perturbed_values" in result
+
+    def test_tree_with_depths(self):
+        """Test with tree containing depths."""
+        defense = MCTSDefense()
         tree = {
-            "values": [0.8, 0.7, 0.9, 0.6],
+            "values": [0.8, 0.7, 0.9],
+            "depths": [0, 1, 2],
         }
         result = defense.apply(
             mcts_tree=tree,
@@ -208,19 +223,18 @@ class TestMCTSDefenseFull:
             threshold=0.3,
             epsilon=0.5,
         )
-        assert "applied" in result
+        assert result["applied"] is True
+        assert result["num_nodes"] == 3
 
-    def test_high_leakage(self):
-        """Test when leakage is high."""
+    def test_perturb_single_value(self):
+        """Test single value perturbation method."""
         defense = MCTSDefense()
-        tree = {"values": [0.9, 0.95, 0.85]}
-        result = defense.apply(
-            mcts_tree=tree,
-            mcts_leakage=0.8,
-            threshold=0.3,
-            epsilon=0.7,
+        perturbed = defense.perturb_single_value(
+            value=0.8,
+            depth=2,
+            epsilon=0.5,
         )
-        assert "applied" in result
+        assert 0 <= perturbed <= 1
 
 
 # ============== prm_defense.py coverage ==============
@@ -238,8 +252,8 @@ class TestPRMDefenseFull:
         )
         assert result["applied"] is False
 
-    def test_high_leakage(self):
-        """Test when leakage is high."""
+    def test_with_steps(self):
+        """Test with reasoning steps - always applies."""
         defense = PRMDefense()
         result = defense.apply(
             reasoning_steps=["Step 1: Calculate", "Step 2: Verify"],
@@ -247,11 +261,12 @@ class TestPRMDefenseFull:
             threshold=0.3,
             epsilon=0.8,
         )
-        assert "applied" in result
+        assert result["applied"] is True
+        assert "modified_trace" in result
 
-    def test_high_epsilon(self):
-        """Test with high epsilon value."""
-        defense = PRMDefense()
+    def test_feature_selective_off(self):
+        """Test with feature-selective disabled."""
+        defense = PRMDefense(use_feature_selective=False)
         result = defense.apply(
             reasoning_steps=["Calculate x = 5", "Then y = x + 3"],
             prm_leakage=0.8,
@@ -259,6 +274,7 @@ class TestPRMDefenseFull:
             epsilon=0.9,
         )
         assert result["applied"] is True
+        assert result["feature_selective"] is False
 
 
 # ============== vote_defense.py coverage ==============
@@ -276,8 +292,8 @@ class TestVoteDefenseFull:
         )
         assert result["applied"] is False
 
-    def test_high_leakage(self):
-        """Test when leakage is high."""
+    def test_with_distribution(self):
+        """Test with distribution - always applies."""
         defense = VoteDefense()
         result = defense.apply(
             vote_distribution=[0.9, 0.05, 0.05],
@@ -285,18 +301,33 @@ class TestVoteDefenseFull:
             threshold=0.3,
             epsilon=0.7,
         )
-        assert "applied" in result
+        assert result["applied"] is True
+        assert "flattened_distribution" in result
 
-    def test_single_candidate(self):
-        """Test with single candidate."""
-        defense = VoteDefense()
+    def test_with_candidates(self):
+        """Test with candidate outputs for resampling."""
+        defense = VoteDefense(use_implicit_rewards=True)
         result = defense.apply(
-            vote_distribution=[1.0],
-            vote_leakage=0.9,
+            vote_distribution=[0.8, 0.15, 0.05],
+            vote_leakage=0.7,
             threshold=0.3,
             epsilon=0.5,
+            candidate_outputs=["Answer A", "Answer B", "Answer C"],
         )
-        assert "applied" in result
+        assert result["applied"] is True
+        assert "resampled_output" in result
+
+    def test_low_leakage_temperature(self):
+        """Test temperature calculation with low leakage."""
+        defense = VoteDefense()
+        result = defense.apply(
+            vote_distribution=[0.5, 0.5],
+            vote_leakage=0.1,  # Below threshold
+            threshold=0.5,
+            epsilon=0.5,
+        )
+        # Temperature should be base (1.0) when leakage <= threshold
+        assert result["temperature_used"] == 1.0
 
 
 # ============== pareto.py coverage ==============
@@ -316,28 +347,53 @@ class TestParetoFull:
         pareto.clear()
         assert len(pareto.get_front()) == 0
 
-    def test_hypervolume(self):
-        """Test hypervolume computation."""
+    def test_get_hypervolume_empty(self):
+        """Test hypervolume on empty front."""
+        pareto = ParetoFront()
+        hv = pareto.get_hypervolume()
+        assert hv == 0.0
+
+    def test_get_hypervolume_with_reference(self):
+        """Test hypervolume with reference point."""
         pareto = ParetoFront()
         pareto.add_point(np.array([0.8, 0.8]), {"id": 1})
-        # Use the actual method name
-        hv = pareto.get_hypervolume()
+        hv = pareto.get_hypervolume(reference_point=np.array([0, 0]))
         assert hv >= 0
 
-    def test_get_closest_to_ideal(self):
+    def test_get_closest_to_ideal_empty(self):
+        """Test closest to ideal on empty front."""
+        pareto = ParetoFront()
+        closest = pareto.get_closest_to_ideal()
+        assert closest is None
+
+    def test_get_closest_to_ideal_with_point(self):
         """Test finding closest point to ideal."""
         pareto = ParetoFront()
         pareto.add_point(np.array([0.9, 0.9]), {"id": 1})
         pareto.add_point(np.array([0.5, 0.5]), {"id": 2})
-        # Use the actual method name
-        closest = pareto.get_closest_to_ideal()
+        closest = pareto.get_closest_to_ideal(ideal_point=np.array([1, 1]))
         assert closest is not None
+        assert closest[1]["id"] == 1  # 0.9,0.9 is closer to 1,1
 
     def test_dominates(self):
         """Test dominance checking."""
         pareto = ParetoFront()
         assert pareto._dominates(np.array([0.9, 0.9]), np.array([0.5, 0.5]))
         assert not pareto._dominates(np.array([0.5, 0.5]), np.array([0.9, 0.9]))
+
+    def test_is_pareto_optimal(self):
+        """Test pareto optimality check."""
+        pareto = ParetoFront()
+        pareto.add_point(np.array([0.8, 0.8]), {"id": 1})
+        assert pareto.is_pareto_optimal(np.array([0.9, 0.9])) is True
+        assert pareto.is_pareto_optimal(np.array([0.5, 0.5])) is False
+
+    def test_size(self):
+        """Test size method."""
+        pareto = ParetoFront()
+        assert pareto.size() == 0
+        pareto.add_point(np.array([0.8, 0.8]), {"id": 1})
+        assert pareto.size() == 1
 
 
 # ============== bandit.py coverage ==============
@@ -354,15 +410,31 @@ class TestBanditFull:
             selected.add(arm)
         assert len(selected) == 5
 
-    def test_ucb_values(self):
-        """Test UCB value computation."""
-        bandit = UCBBandit(num_arms=3, exploration_constant=2.0)
-        # Update each arm
+    def test_get_arm_stats(self):
+        """Test getting arm statistics."""
+        bandit = UCBBandit(num_arms=3)
         for i in range(3):
             bandit.update(i, 0.5 + i * 0.1)
-        # Select should work
+        stats = bandit.get_arm_stats()
+        assert len(stats) == 3
+        assert "average_reward" in stats[0]
+
+    def test_get_exploration_rate(self):
+        """Test exploration rate computation."""
+        bandit = UCBBandit(num_arms=3)
+        rate = bandit.get_exploration_rate()
+        assert rate == 1.0  # All exploration initially
+
+        for i in range(3):
+            bandit.update(i, 0.5)
+        rate = bandit.get_exploration_rate()
+        assert 0 <= rate <= 1
+
+    def test_get_current_arm(self):
+        """Test current arm getter."""
+        bandit = UCBBandit(num_arms=3)
         arm = bandit.select_arm()
-        assert 0 <= arm < 3
+        assert bandit.get_current_arm() == arm
 
 
 # ============== attacks coverage ==============
@@ -373,7 +445,6 @@ class TestAttacksFull:
         """Test NLBA attack execute."""
         attack = NLBAAttack()
         model = MockReasoningLLM()
-        # Use correct parameter name: target_model
         result = attack.execute(
             query="Test query",
             target_model=model,
@@ -411,7 +482,7 @@ class TestAttacksFull:
             confidence=0.9,
         )
         s = str(result)
-        assert "0.8" in s or "success" in s.lower() or len(s) > 0
+        assert len(s) > 0
 
 
 # ============== config coverage ==============
@@ -426,7 +497,7 @@ class TestConfigFull:
         assert "raas" in d
         assert "rppo" in d
 
-    def test_config_from_file(self):
+    def test_config_from_dict(self):
         """Test loading config from dict."""
         d = {
             "mplq": {"prm_threshold": 0.5},

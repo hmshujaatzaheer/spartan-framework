@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  PYTHONPATH: src
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -38,6 +35,8 @@ jobs:
         run: isort --check-only --profile black src/ tests/ examples/
 
       - name: Run tests with coverage
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src
         run: pytest tests/ -v --cov=spartan --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage to Codecov

@@ -1,4 +1,4 @@
-﻿# Getting Started
+# Getting Started
 
 ## Installation
 
@@ -121,3 +121,5 @@ spartan evaluate --mode attack --num-samples 100
 - Explore the [API Reference](api_reference.md) for detailed documentation
 - Learn about the [Algorithms](algorithms.md) behind SPARTAN
 - See [Examples](examples.md) for more use cases
+
+<!-- Last updated: 2026-01-15 -->

@@ -177,3 +177,5 @@ class TestMPLQ:
 Feel free to open an issue for any questions or concerns.
 
 Thank you for contributing to SPARTAN!
+
+<!-- Last updated: 2026-01-15 -->

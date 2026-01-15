@@ -1,4 +1,4 @@
-﻿# SPARTAN Documentation
+# SPARTAN Documentation
 
 Welcome to the SPARTAN framework documentation.
 
@@ -43,3 +43,5 @@ result = spartan.process("What is 2 + 2?")
 print(f"Risk Score: {result.risk_score:.4f}")
 print(f"Defense Applied: {result.defense_applied}")
 ```
+
+<!-- Last updated: 2026-01-15 -->

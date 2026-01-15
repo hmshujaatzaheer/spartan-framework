@@ -340,4 +340,4 @@ For questions and feedback, please open an issue on GitHub or contact the mainta
 
 **SPARTAN** - Protecting Reasoning LLMs from Privacy Attacks
 
-
+<!-- Last updated: 2026-01-15 -->

@@ -1,4 +1,4 @@
-﻿# Examples
+# Examples
 
 ## Attack Detection Examples
 
@@ -238,3 +238,5 @@ llm = MyCustomLLM()
 spartan = SPARTAN(llm)
 result = spartan.process("Test query")
 ```
+
+<!-- Last updated: 2026-01-15 -->

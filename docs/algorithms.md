@@ -150,3 +150,5 @@ Accuracy retention is bounded by maximum defense intensity.
 2. **Normalization**: Component weights are automatically normalized to sum to 1
 3. **Clipping**: Defense intensity is clipped to [ε_min, ε_max]
 4. **Reference Distribution**: PRM reference is computed from held-out non-member data
+
+<!-- Last updated: 2026-01-15 -->

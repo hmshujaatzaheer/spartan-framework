@@ -1,4 +1,4 @@
-﻿codecov:
+codecov:
   require_ci_to_pass: yes
 
 coverage:
@@ -23,3 +23,5 @@ flags:
     paths:
       - src/spartan/
     carryforward: true
+
+# Last updated: 2026-01-15

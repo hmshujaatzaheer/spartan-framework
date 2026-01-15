@@ -263,3 +263,5 @@ def gaussian_noise(shape, scale: float, seed: Optional[int] = None) -> np.ndarra
 def laplace_noise(shape, scale: float, seed: Optional[int] = None) -> np.ndarray
 def calibrated_noise(shape, sensitivity: float, epsilon: float, mechanism: str) -> np.ndarray
 ```
+
+<!-- Last updated: 2026-01-15 -->

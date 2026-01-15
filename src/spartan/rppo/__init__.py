@@ -7,8 +7,8 @@ This module implements multi-objective optimization for balancing:
 - Computational efficiency
 """
 
-from spartan.rppo.optimizer import RPPO, RPPOResult
 from spartan.rppo.bandit import UCBBandit
+from spartan.rppo.optimizer import RPPO, RPPOResult
 from spartan.rppo.pareto import ParetoFront
 
 __all__ = [

@@ -3,14 +3,14 @@ MPLQ: Mechanistic Privacy Leakage Quantification
 
 This module implements privacy leakage detection for reasoning LLM mechanisms:
 - PRM (Process Reward Model) leakage analysis
-- Self-consistency voting distribution analysis  
+- Self-consistency voting distribution analysis
 - MCTS value network deviation detection
 """
 
 from spartan.mplq.analyzer import MPLQ, MPLQResult
+from spartan.mplq.mcts_leakage import MCTSLeakageAnalyzer
 from spartan.mplq.prm_leakage import PRMLeakageAnalyzer
 from spartan.mplq.vote_leakage import VoteLeakageAnalyzer
-from spartan.mplq.mcts_leakage import MCTSLeakageAnalyzer
 
 __all__ = [
     "MPLQ",

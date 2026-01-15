@@ -12,10 +12,10 @@ from typing import Optional
 
 def main(args: Optional[list] = None) -> int:
     """Main CLI entry point.
-    
+
     Args:
         args: Command line arguments (uses sys.argv if None)
-        
+
     Returns:
         Exit code
     """
@@ -23,15 +23,15 @@ def main(args: Optional[list] = None) -> int:
         prog="spartan",
         description="SPARTAN: Secure Privacy-Adaptive Reasoning with Test-time Attack Neutralization",
     )
-    
+
     parser.add_argument(
         "--version",
         action="version",
         version="%(prog)s 1.0.0",
     )
-    
+
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
-    
+
     # Analyze command
     analyze_parser = subparsers.add_parser(
         "analyze",
@@ -54,7 +54,7 @@ def main(args: Optional[list] = None) -> int:
         default="-",
         help="Output file (- for stdout)",
     )
-    
+
     # Defend command
     defend_parser = subparsers.add_parser(
         "defend",
@@ -78,7 +78,7 @@ def main(args: Optional[list] = None) -> int:
         default=0.1,
         help="Defense intensity",
     )
-    
+
     # Evaluate command
     eval_parser = subparsers.add_parser(
         "evaluate",
@@ -102,7 +102,7 @@ def main(args: Optional[list] = None) -> int:
         default="results.json",
         help="Output file for results",
     )
-    
+
     # Config command
     config_parser = subparsers.add_parser(
         "config",
@@ -114,13 +114,13 @@ def main(args: Optional[list] = None) -> int:
         default="spartan_config.json",
         help="Output file",
     )
-    
+
     parsed_args = parser.parse_args(args)
-    
+
     if parsed_args.command is None:
         parser.print_help()
         return 0
-    
+
     if parsed_args.command == "analyze":
         return _cmd_analyze(parsed_args)
     elif parsed_args.command == "defend":
@@ -129,42 +129,42 @@ def main(args: Optional[list] = None) -> int:
         return _cmd_evaluate(parsed_args)
     elif parsed_args.command == "config":
         return _cmd_config(parsed_args)
-    
+
     return 0
 
 
 def _cmd_analyze(args: argparse.Namespace) -> int:
     """Handle analyze command."""
     from spartan.mplq import MPLQ
-    
+
     mplq = MPLQ()
-    
+
     # Parse PRM scores
     prm_scores = None
     if args.prm_scores:
         prm_scores = [float(x) for x in args.prm_scores.split(",")]
-    
+
     result = mplq.analyze(
         query=args.query,
         prm_scores=prm_scores,
     )
-    
+
     output = json.dumps(result.to_dict(), indent=2)
-    
+
     if args.output == "-":
         print(output)
     else:
         with open(args.output, "w") as f:
             f.write(output)
-    
+
     return 0
 
 
 def _cmd_defend(args: argparse.Namespace) -> int:
     """Handle defend command."""
-    from spartan.raas import RAAS
     from spartan.mplq import MPLQResult
-    
+    from spartan.raas import RAAS
+
     # Create mock risk analysis
     risk_analysis = MPLQResult(
         total_risk=args.risk_score,
@@ -174,17 +174,17 @@ def _cmd_defend(args: argparse.Namespace) -> int:
         importance_weight=1.0,
         component_weights=(0.4, 0.35, 0.25),
     )
-    
+
     raas = RAAS()
     result = raas.sanitize(
         output=args.input,
         risk_analysis=risk_analysis,
     )
-    
+
     print(f"Original: {result.original_output}")
     print(f"Sanitized: {result.sanitized_output}")
     print(f"Defense applied: {result.defense_applied}")
-    
+
     return 0
 
 
@@ -194,7 +194,7 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
     print(f"Data file: {args.data}")
     print(f"Output: {args.output}")
     print("Note: Full evaluation requires model access.")
-    
+
     # Placeholder results
     results = {
         "mode": args.mode,
@@ -204,27 +204,27 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
             "tpr_at_fpr_0.01": 0.31,
         },
     }
-    
+
     with open(args.output, "w") as f:
         json.dump(results, f, indent=2)
-    
+
     print(f"Results saved to {args.output}")
-    
+
     return 0
 
 
 def _cmd_config(args: argparse.Namespace) -> int:
     """Handle config command."""
     from spartan.config import SPARTANConfig
-    
+
     config = SPARTANConfig()
     config_dict = config.to_dict()
-    
+
     with open(args.output, "w") as f:
         json.dump(config_dict, f, indent=2)
-    
+
     print(f"Configuration saved to {args.output}")
-    
+
     return 0
 
 

@@ -4,8 +4,8 @@ Test Configuration and Fixtures
 Shared fixtures for SPARTAN test suite.
 """
 
-import pytest
 import numpy as np
+import pytest
 
 from spartan.config import SPARTANConfig
 from spartan.models.mock import MockReasoningLLM

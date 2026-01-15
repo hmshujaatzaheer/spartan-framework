@@ -8,10 +8,10 @@ reasoning LLM test-time compute mechanisms:
 - MVNA: MCTS Value Network Attack (targets MCTS search)
 """
 
-from spartan.attacks.base import BaseAttack, AttackResult
+from spartan.attacks.base import AttackResult, BaseAttack
+from spartan.attacks.mvna import MVNAAttack
 from spartan.attacks.nlba import NLBAAttack
 from spartan.attacks.smva import SMVAAttack
-from spartan.attacks.mvna import MVNAAttack
 
 __all__ = [
     "BaseAttack",

@@ -226,4 +226,3 @@ def compute_precision_recall_curve(
         recalls.append(recall)
 
     return precisions, recalls, thresholds.tolist()
-

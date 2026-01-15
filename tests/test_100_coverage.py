@@ -1,4 +1,4 @@
-﻿"""
+"""
 Comprehensive Coverage Tests - Final Push to 100%
 
 Tests targeting all remaining uncovered lines.
@@ -278,13 +278,13 @@ class TestVoteLeakageCoverage:
         """Test pattern detection for dominant answer."""
         analyzer = VoteLeakageAnalyzer()
         result = analyzer.analyze(vote_distribution=[0.95, 0.03, 0.02])
-        assert result["patterns"]["is_dominant"] is True
+        assert result["patterns"]["is_dominant"] == True
 
     def test_vote_patterns_two_way(self):
         """Test pattern detection for two-way split."""
         analyzer = VoteLeakageAnalyzer()
         result = analyzer.analyze(vote_distribution=[0.55, 0.40, 0.05])
-        assert result["patterns"]["is_two_way"] is True
+        assert result["patterns"]["is_two_way"] == True
 
     def test_vote_patterns_long_tail(self):
         """Test pattern detection for long tail."""

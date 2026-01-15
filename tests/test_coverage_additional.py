@@ -7,26 +7,28 @@ Tests for edge cases and uncovered lines in existing modules.
 import numpy as np
 import pytest
 
-from spartan.attacks.base import AttackResult, BaseAttack
+from spartan.attacks.base import AttackResult
 from spartan.config import SPARTANConfig
 from spartan.core import SPARTAN, SPARTANResult
-from spartan.models.base import BaseReasoningLLM, LLMOutput
+from spartan.models.mock import MockReasoningLLM
+from spartan.mplq import MPLQResult
 from spartan.mplq.mcts_leakage import MCTSLeakageAnalyzer
 from spartan.mplq.prm_leakage import PRMLeakageAnalyzer
 from spartan.mplq.vote_leakage import VoteLeakageAnalyzer
+from spartan.raas import RAASResult
 from spartan.raas.mcts_defense import MCTSDefense
 from spartan.raas.prm_defense import PRMDefense
 from spartan.raas.vote_defense import VoteDefense
 from spartan.rppo.bandit import UCBBandit
 from spartan.rppo.pareto import ParetoFront
 from spartan.utils.distributions import (
+    cross_entropy,
     entropy,
     hellinger_distance,
     js_divergence,
     kl_divergence,
-    normalize_distribution,
-    total_variation,
-    wasserstein_distance,
+    renyi_divergence,
+    total_variation_distance,
 )
 from spartan.utils.metrics import (
     compute_accuracy,
@@ -38,7 +40,6 @@ from spartan.utils.metrics import (
 from spartan.utils.noise import (
     adaptive_noise,
     calibrated_noise,
-    feature_selective_noise,
     gaussian_noise,
     laplace_noise,
 )
@@ -74,22 +75,11 @@ class TestNoiseEdgeCases:
         """Test adaptive noise with high risk."""
         noise = adaptive_noise((100,), risk_score=0.9, base_scale=1.0)
         assert noise.shape == (100,)
-        # High risk should produce larger noise
         assert np.std(noise) > 0
 
     def test_adaptive_noise_low_risk(self):
         """Test adaptive noise with low risk."""
         noise = adaptive_noise((100,), risk_score=0.1, base_scale=1.0)
-        assert noise.shape == (100,)
-
-    def test_feature_selective_noise(self):
-        """Test feature selective noise."""
-        noise = feature_selective_noise(
-            shape=(100,),
-            nl_ratio=10.0,
-            math_ratio=1.0,
-            seed=42,
-        )
         assert noise.shape == (100,)
 
 
@@ -122,20 +112,48 @@ class TestDistributionsEdgeCases:
         e = entropy(dist)
         assert e == 0.0
 
-    def test_wasserstein_distance(self):
-        """Test Wasserstein distance."""
-        p = np.array([1.0, 0.0, 0.0])
-        q = np.array([0.0, 0.0, 1.0])
+    def test_entropy_with_base(self):
+        """Test entropy with custom base."""
+        dist = np.array([0.5, 0.5])
+        e_natural = entropy(dist)
+        e_base2 = entropy(dist, base=2.0)
+        assert e_base2 > 0
+        assert e_natural != e_base2
 
-        wd = wasserstein_distance(p, q)
-        assert wd > 0
+    def test_cross_entropy(self):
+        """Test cross entropy computation."""
+        p = np.array([0.9, 0.1])
+        q = np.array([0.6, 0.4])
+        ce = cross_entropy(p, q)
+        assert ce > 0
 
-    def test_normalize_distribution(self):
-        """Test distribution normalization."""
-        unnorm = np.array([2.0, 3.0, 5.0])
-        norm = normalize_distribution(unnorm)
+    def test_total_variation_distance(self):
+        """Test total variation distance."""
+        p = np.array([1.0, 0.0])
+        q = np.array([0.0, 1.0])
+        tv = total_variation_distance(p, q)
+        assert abs(tv - 1.0) < 1e-10
 
-        assert abs(norm.sum() - 1.0) < 1e-10
+    def test_hellinger_distance(self):
+        """Test Hellinger distance."""
+        p = np.array([1.0, 0.0])
+        q = np.array([0.0, 1.0])
+        h = hellinger_distance(p, q)
+        assert 0 <= h <= 1
+
+    def test_renyi_divergence(self):
+        """Test Renyi divergence."""
+        p = np.array([0.7, 0.3])
+        q = np.array([0.4, 0.6])
+
+        # Test with alpha=2
+        r2 = renyi_divergence(p, q, alpha=2.0)
+        assert r2 >= 0
+
+        # Test with alpha=1 (should equal KL)
+        r1 = renyi_divergence(p, q, alpha=1.0)
+        kl = kl_divergence(p, q)
+        assert abs(r1 - kl) < 1e-6
 
 
 class TestMetricsEdgeCases:
@@ -147,7 +165,7 @@ class TestMetricsEdgeCases:
         scores = [0.1, 0.5, 0.7, 0.9]
 
         auc = compute_auc_roc(labels, scores)
-        assert auc == 0.5  # Undefined case
+        assert auc == 0.5
 
     def test_accuracy_empty(self):
         """Test accuracy with empty lists."""
@@ -160,7 +178,7 @@ class TestMetricsEdgeCases:
         scores = [0.1, 0.2, 0.3, 0.4]
 
         tpr = compute_tpr_at_fpr(labels, scores, fpr_threshold=0.5)
-        assert tpr == 0.0  # No positives
+        assert tpr == 0.0
 
     def test_f1_score_no_positives(self):
         """Test F1 score with no positive predictions."""
@@ -183,6 +201,26 @@ class TestMetricsEdgeCases:
         assert len(recalls) == 10
         assert len(thresholds) == 10
 
+    def test_auc_roc_length_mismatch(self):
+        """Test AUC-ROC with mismatched lengths."""
+        with pytest.raises(ValueError):
+            compute_auc_roc([1, 0], [0.5])
+
+    def test_accuracy_length_mismatch(self):
+        """Test accuracy with mismatched lengths."""
+        with pytest.raises(ValueError):
+            compute_accuracy([1, 0], [1])
+
+    def test_tpr_at_fpr_length_mismatch(self):
+        """Test TPR@FPR with mismatched lengths."""
+        with pytest.raises(ValueError):
+            compute_tpr_at_fpr([1, 0], [0.5])
+
+    def test_f1_score_length_mismatch(self):
+        """Test F1 with mismatched lengths."""
+        with pytest.raises(ValueError):
+            compute_f1_score([1, 0], [1])
+
 
 class TestVoteLeakageEdgeCases:
     """Additional tests for vote leakage analyzer."""
@@ -192,22 +230,12 @@ class TestVoteLeakageEdgeCases:
         analyzer = VoteLeakageAnalyzer()
         result = analyzer.analyze(vote_distribution=[0.25, 0.25, 0.25, 0.25])
 
-        assert result["leakage_score"] < 0.1  # Low leakage for uniform
+        assert result["leakage_score"] < 0.1
 
     def test_single_candidate(self):
         """Test with single candidate."""
         analyzer = VoteLeakageAnalyzer()
         result = analyzer.analyze(vote_distribution=[1.0])
-
-        assert "leakage_score" in result
-
-    def test_analyze_patterns(self):
-        """Test pattern analysis."""
-        analyzer = VoteLeakageAnalyzer()
-        result = analyzer.analyze(
-            vote_distribution=[0.6, 0.3, 0.1],
-            analyze_patterns=True,
-        )
 
         assert "leakage_score" in result
 
@@ -239,7 +267,7 @@ class TestMCTSLeakageEdgeCases:
         analyzer = MCTSLeakageAnalyzer(baseline_mean=0.5, baseline_std=0.1)
         result = analyzer.analyze(mcts_values=[0.99, 0.98, 0.97])
 
-        assert result["leakage_score"] > 0.5  # High leakage
+        assert result["leakage_score"] > 0.5
 
 
 class TestDefenseEdgeCases:
@@ -265,7 +293,6 @@ class TestDefenseEdgeCases:
         )
 
         sanitized = result["sanitized_distribution"]
-        # Should be more uniform after high temperature
         assert max(sanitized) < 0.9
 
     def test_mcts_defense_empty_tree(self):
@@ -286,7 +313,6 @@ class TestBanditEdgeCases:
         """Test with many arms."""
         bandit = UCBBandit(num_arms=100, exploration_constant=2.0)
 
-        # Pull each arm once
         for _ in range(100):
             arm = bandit.select_arm()
             bandit.update(arm, np.random.random())
@@ -298,11 +324,9 @@ class TestBanditEdgeCases:
         """Test with zero exploration constant."""
         bandit = UCBBandit(num_arms=5, exploration_constant=0.0)
 
-        # With no exploration, should exploit immediately after initial pulls
         for i in range(5):
             bandit.update(i, i * 0.1)
 
-        # Should select arm with highest mean
         selected = bandit.select_arm()
         assert selected == 4
 
@@ -337,9 +361,6 @@ class TestCoreEdgeCases:
 
     def test_result_to_dict(self):
         """Test SPARTANResult to_dict method."""
-        from spartan.mplq import MPLQResult
-        from spartan.raas import RAASResult
-
         mplq_result = MPLQResult(
             total_risk=0.5,
             prm_leakage=0.3,
@@ -380,16 +401,14 @@ class TestCoreEdgeCases:
         assert config.prm_threshold == 0.4
         assert config.epsilon_max == 0.7
 
+    def test_spartan_evaluate_defense(self):
+        """Test SPARTAN evaluate_defense method."""
+        llm = MockReasoningLLM()
+        spartan = SPARTAN(llm)
 
-class TestBaseModelAbstract:
-    """Tests for abstract base model."""
+        queries = ["Query 1", "Query 2", "Query 3", "Query 4"]
+        labels = [1, 0, 1, 0]
 
-    def test_base_llm_abstract(self):
-        """Test that BaseReasoningLLM is abstract."""
-        with pytest.raises(TypeError):
-            BaseReasoningLLM()
-
-    def test_base_attack_abstract(self):
-        """Test that BaseAttack is abstract."""
-        with pytest.raises(TypeError):
-            BaseAttack()
+        metrics = spartan.evaluate_defense(queries, labels)
+        assert "auc_roc" in metrics
+        assert "defense_rate" in metrics

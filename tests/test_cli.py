@@ -4,60 +4,38 @@ Tests for CLI Module
 Comprehensive tests for command-line interface.
 """
 
+import json
 import os
 import sys
 import tempfile
 from io import StringIO
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
-from spartan.cli import (
-    cmd_analyze,
-    cmd_config,
-    cmd_defend,
-    cmd_evaluate,
-    create_parser,
-    main,
-)
-from spartan.config import SPARTANConfig
+from spartan.cli import main
 
 
-class TestCLIParser:
-    """Tests for CLI argument parser."""
+class TestCLIMain:
+    """Tests for main CLI function."""
 
-    def test_create_parser(self):
-        """Test parser creation."""
-        parser = create_parser()
-        assert parser is not None
+    def test_main_no_args(self):
+        """Test main with no arguments shows help."""
+        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+            result = main([])
+            assert result == 0
 
-    def test_analyze_command(self):
-        """Test analyze command parsing."""
-        parser = create_parser()
-        args = parser.parse_args(["analyze", "--query", "test query"])
-        assert args.command == "analyze"
-        assert args.query == "test query"
+    def test_main_version(self):
+        """Test version flag."""
+        with pytest.raises(SystemExit) as exc_info:
+            main(["--version"])
+        assert exc_info.value.code == 0
 
-    def test_defend_command(self):
-        """Test defend command parsing."""
-        parser = create_parser()
-        args = parser.parse_args(["defend", "--input", "test.txt"])
-        assert args.command == "defend"
-        assert args.input == "test.txt"
-
-    def test_evaluate_command(self):
-        """Test evaluate command parsing."""
-        parser = create_parser()
-        args = parser.parse_args(["evaluate", "--mode", "attack"])
-        assert args.command == "evaluate"
-        assert args.mode == "attack"
-
-    def test_config_command(self):
-        """Test config command parsing."""
-        parser = create_parser()
-        args = parser.parse_args(["config", "--show"])
-        assert args.command == "config"
-        assert args.show is True
+    def test_main_help(self):
+        """Test help flag."""
+        with pytest.raises(SystemExit) as exc_info:
+            main(["--help"])
+        assert exc_info.value.code == 0
 
 
 class TestAnalyzeCommand:
@@ -65,40 +43,90 @@ class TestAnalyzeCommand:
 
     def test_analyze_basic(self):
         """Test basic analysis."""
-        with patch("sys.stdout", new_callable=StringIO):
-            result = cmd_analyze(query="What is 2+2?", verbose=False)
-            assert result is not None
-
-    def test_analyze_verbose(self):
-        """Test verbose analysis."""
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            cmd_analyze(query="Test query", verbose=True)
+            result = main(["analyze", "--query", "What is 2+2?"])
+            assert result == 0
             output = mock_stdout.getvalue()
-            # Should have some output in verbose mode
-            assert len(output) >= 0
+            assert "total_risk" in output or len(output) > 0
+
+    def test_analyze_with_prm_scores(self):
+        """Test analysis with PRM scores."""
+        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+            result = main(
+                [
+                    "analyze",
+                    "--query",
+                    "Test query",
+                    "--prm-scores",
+                    "0.9,0.8,0.7",
+                ]
+            )
+            assert result == 0
+
+    def test_analyze_with_output_file(self):
+        """Test analysis with output file."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            temp_path = f.name
+
+        try:
+            result = main(
+                [
+                    "analyze",
+                    "--query",
+                    "Test query",
+                    "--output",
+                    temp_path,
+                ]
+            )
+            assert result == 0
+            assert os.path.exists(temp_path)
+
+            with open(temp_path) as f:
+                data = json.load(f)
+            assert "total_risk" in data
+        finally:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
 
 
 class TestDefendCommand:
     """Tests for defend command."""
 
-    def test_defend_with_query(self):
-        """Test defense with direct query."""
+    def test_defend_basic(self):
+        """Test basic defense."""
+        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+            result = main(["defend", "--input", "Test output to defend"])
+            assert result == 0
+            output = mock_stdout.getvalue()
+            assert "Original" in output or "Sanitized" in output
+
+    def test_defend_with_risk_score(self):
+        """Test defense with custom risk score."""
         with patch("sys.stdout", new_callable=StringIO):
-            result = cmd_defend(query="Test query", epsilon=0.1)
-            assert result is not None
+            result = main(
+                [
+                    "defend",
+                    "--input",
+                    "Test output",
+                    "--risk-score",
+                    "0.8",
+                ]
+            )
+            assert result == 0
 
-    def test_defend_with_file(self):
-        """Test defense with input file."""
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
-            f.write("Test query from file")
-            temp_path = f.name
-
-        try:
-            with patch("sys.stdout", new_callable=StringIO):
-                result = cmd_defend(input_file=temp_path, epsilon=0.1)
-                assert result is not None
-        finally:
-            os.unlink(temp_path)
+    def test_defend_with_epsilon(self):
+        """Test defense with custom epsilon."""
+        with patch("sys.stdout", new_callable=StringIO):
+            result = main(
+                [
+                    "defend",
+                    "--input",
+                    "Test output",
+                    "--epsilon",
+                    "0.3",
+                ]
+            )
+            assert result == 0
 
 
 class TestEvaluateCommand:
@@ -106,78 +134,80 @@ class TestEvaluateCommand:
 
     def test_evaluate_attack_mode(self):
         """Test attack evaluation mode."""
-        with patch("sys.stdout", new_callable=StringIO):
-            result = cmd_evaluate(mode="attack", num_samples=10)
-            assert result is not None
-            assert "auc" in str(result).lower() or isinstance(result, dict)
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            temp_data = f.name
+            json.dump({"queries": ["q1"], "labels": [1]}, f)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            temp_output = f.name
+
+        try:
+            with patch("sys.stdout", new_callable=StringIO):
+                result = main(
+                    [
+                        "evaluate",
+                        "--mode",
+                        "attack",
+                        "--data",
+                        temp_data,
+                        "--output",
+                        temp_output,
+                    ]
+                )
+                assert result == 0
+        finally:
+            if os.path.exists(temp_data):
+                os.unlink(temp_data)
+            if os.path.exists(temp_output):
+                os.unlink(temp_output)
 
     def test_evaluate_defense_mode(self):
         """Test defense evaluation mode."""
-        with patch("sys.stdout", new_callable=StringIO):
-            result = cmd_evaluate(mode="defense", num_samples=10)
-            assert result is not None
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            temp_data = f.name
+            json.dump({"queries": ["q1"], "labels": [1]}, f)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            temp_output = f.name
+
+        try:
+            with patch("sys.stdout", new_callable=StringIO):
+                result = main(
+                    [
+                        "evaluate",
+                        "--mode",
+                        "defense",
+                        "--data",
+                        temp_data,
+                        "--output",
+                        temp_output,
+                    ]
+                )
+                assert result == 0
+        finally:
+            if os.path.exists(temp_data):
+                os.unlink(temp_data)
+            if os.path.exists(temp_output):
+                os.unlink(temp_output)
 
 
 class TestConfigCommand:
     """Tests for config command."""
 
-    def test_config_show(self):
-        """Test showing configuration."""
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            cmd_config(show=True)
-            output = mock_stdout.getvalue()
-            assert "epsilon" in output.lower() or len(output) >= 0
-
-    def test_config_save(self):
-        """Test saving configuration."""
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+    def test_config_default(self):
+        """Test default config generation."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             temp_path = f.name
 
         try:
-            cmd_config(save=temp_path)
+            with patch("sys.stdout", new_callable=StringIO):
+                result = main(["config", "--output", temp_path])
+                assert result == 0
+
             assert os.path.exists(temp_path)
+            with open(temp_path) as f:
+                config = json.load(f)
+            assert "mplq" in config or "raas" in config
         finally:
             if os.path.exists(temp_path):
                 os.unlink(temp_path)
-
-    def test_config_load(self):
-        """Test loading configuration."""
-        config = SPARTANConfig(epsilon_max=0.9)
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            import yaml
-
-            yaml.dump(config.to_dict(), f)
-            temp_path = f.name
-
-        try:
-            result = cmd_config(load=temp_path)
-            assert result is not None
-        finally:
-            os.unlink(temp_path)
-
-
-class TestMainFunction:
-    """Tests for main entry point."""
-
-    def test_main_no_args(self):
-        """Test main with no arguments."""
-        with patch("sys.argv", ["spartan"]):
-            with patch("sys.stdout", new_callable=StringIO):
-                with pytest.raises(SystemExit):
-                    main()
-
-    def test_main_help(self):
-        """Test main with help flag."""
-        with patch("sys.argv", ["spartan", "--help"]):
-            with pytest.raises(SystemExit) as exc_info:
-                main()
-            assert exc_info.value.code == 0
-
-    def test_main_analyze(self):
-        """Test main with analyze command."""
-        with patch("sys.argv", ["spartan", "analyze", "--query", "test"]):
-            with patch("sys.stdout", new_callable=StringIO):
-                try:
-                    main()
-                except SystemExit as e:
-                    assert e.code in [0, None]

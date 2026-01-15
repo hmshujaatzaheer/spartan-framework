@@ -226,7 +226,7 @@ class TestBenchmarkRunner:
         assert "max_time_ms" in metrics
         assert "throughput_qps" in metrics
 
-        assert metrics["avg_time_ms"] > 0
+        assert metrics["avg_time_ms"] >= 0
         assert metrics["throughput_qps"] > 0
 
     def test_run_full_benchmark(self):

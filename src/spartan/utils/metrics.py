@@ -1,4 +1,4 @@
-"""
+﻿"""
 Evaluation Metrics
 
 Metrics for evaluating attack and defense performance.
@@ -54,7 +54,11 @@ def compute_auc_roc(
     fpr = np.concatenate([[0], fpr])
 
     # Compute AUC using trapezoidal rule
-    auc = np.trapz(tpr, fpr)
+    # Use trapezoid (NumPy 2.0+) or trapz (older versions)
+    try:
+        auc = np.trapezoid(tpr, fpr)
+    except AttributeError:
+        auc = np.trapz(tpr, fpr)
 
     return float(auc)
 
@@ -222,3 +226,4 @@ def compute_precision_recall_curve(
         recalls.append(recall)
 
     return precisions, recalls, thresholds.tolist()
+

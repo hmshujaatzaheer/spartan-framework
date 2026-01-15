@@ -4,13 +4,14 @@ Tests for Evaluate Module
 Comprehensive tests for evaluation functions.
 """
 
-import pytest
-import tempfile
-import os
 import json
+import os
+import tempfile
 
-from spartan.evaluate import evaluate_attack, evaluate_defense, main
+import pytest
+
 from spartan.config import SPARTANConfig
+from spartan.evaluate import evaluate_attack, evaluate_defense, main
 
 
 class TestEvaluateAttack:
@@ -117,8 +118,8 @@ class TestEvaluateMain:
     def test_main_attack_mode(self):
         """Test main with attack mode."""
         import sys
-        from unittest.mock import patch
         from io import StringIO
+        from unittest.mock import patch
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             temp_path = f.name
@@ -140,8 +141,8 @@ class TestEvaluateMain:
     def test_main_defense_mode(self):
         """Test main with defense mode."""
         import sys
-        from unittest.mock import patch
         from io import StringIO
+        from unittest.mock import patch
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             temp_path = f.name

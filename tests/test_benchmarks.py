@@ -4,11 +4,12 @@ Tests for Benchmarks Module
 Comprehensive tests for BenchmarkRunner and DatasetLoader.
 """
 
-import pytest
-import numpy as np
 import json
-import tempfile
 import os
+import tempfile
+
+import numpy as np
+import pytest
 
 from spartan.benchmarks import BenchmarkRunner, DatasetLoader
 from spartan.benchmarks.datasets import BenchmarkDataset

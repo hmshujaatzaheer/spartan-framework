@@ -4,44 +4,44 @@ Additional Tests for Full Coverage
 Tests for edge cases and uncovered lines in existing modules.
 """
 
-import pytest
 import numpy as np
+import pytest
 
-from spartan.utils.noise import (
-    gaussian_noise,
-    laplace_noise,
-    calibrated_noise,
-    adaptive_noise,
-    feature_selective_noise,
-)
-from spartan.utils.distributions import (
-    kl_divergence,
-    js_divergence,
-    entropy,
-    total_variation,
-    hellinger_distance,
-    wasserstein_distance,
-    normalize_distribution,
-)
-from spartan.utils.metrics import (
-    compute_auc_roc,
-    compute_accuracy,
-    compute_tpr_at_fpr,
-    compute_f1_score,
-    compute_precision_recall_curve,
-)
-from spartan.mplq.vote_leakage import VoteLeakageAnalyzer
+from spartan.attacks.base import AttackResult, BaseAttack
+from spartan.config import SPARTANConfig
+from spartan.core import SPARTAN, SPARTANResult
+from spartan.models.base import BaseReasoningLLM, LLMOutput
 from spartan.mplq.mcts_leakage import MCTSLeakageAnalyzer
 from spartan.mplq.prm_leakage import PRMLeakageAnalyzer
+from spartan.mplq.vote_leakage import VoteLeakageAnalyzer
 from spartan.raas.mcts_defense import MCTSDefense
 from spartan.raas.prm_defense import PRMDefense
 from spartan.raas.vote_defense import VoteDefense
 from spartan.rppo.bandit import UCBBandit
 from spartan.rppo.pareto import ParetoFront
-from spartan.models.base import BaseReasoningLLM, LLMOutput
-from spartan.attacks.base import BaseAttack, AttackResult
-from spartan.core import SPARTAN, SPARTANResult
-from spartan.config import SPARTANConfig
+from spartan.utils.distributions import (
+    entropy,
+    hellinger_distance,
+    js_divergence,
+    kl_divergence,
+    normalize_distribution,
+    total_variation,
+    wasserstein_distance,
+)
+from spartan.utils.metrics import (
+    compute_accuracy,
+    compute_auc_roc,
+    compute_f1_score,
+    compute_precision_recall_curve,
+    compute_tpr_at_fpr,
+)
+from spartan.utils.noise import (
+    adaptive_noise,
+    calibrated_noise,
+    feature_selective_noise,
+    gaussian_noise,
+    laplace_noise,
+)
 
 
 class TestNoiseEdgeCases:

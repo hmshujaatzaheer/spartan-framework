@@ -4,19 +4,20 @@ Tests for CLI Module
 Comprehensive tests for command-line interface.
 """
 
-import pytest
+import os
 import sys
 import tempfile
-import os
 from io import StringIO
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from spartan.cli import (
-    create_parser,
     cmd_analyze,
+    cmd_config,
     cmd_defend,
     cmd_evaluate,
-    cmd_config,
+    create_parser,
     main,
 )
 from spartan.config import SPARTANConfig

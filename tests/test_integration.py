@@ -277,3 +277,6 @@ class TestEndToEnd:
 
         # Low risk should have minimal defense
         assert result.defense_result.epsilon_used <= 0.5
+
+
+# Last updated: 2026-01-15

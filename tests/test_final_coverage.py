@@ -1,4 +1,4 @@
-﻿"""
+"""
 Final Coverage Push - Targeting Remaining Uncovered Lines
 
 Tests for 100% coverage based on actual source code analysis.
@@ -275,3 +275,6 @@ class TestBaseAttackProperties:
         """Test attack name property."""
         attack = NLBAAttack()
         assert attack.name == "NLBAAttack"
+
+
+# Last updated: 2026-01-15

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Complete Coverage Tests - All Remaining Uncovered Lines
 
 Targets exact uncovered branches from coverage report.
@@ -217,3 +217,6 @@ class TestAdditionalBranches:
         attack = SMVAAttack()
         gini = attack._compute_gini(np.array([]))
         assert gini == 0.0
+
+
+# Last updated: 2026-01-15

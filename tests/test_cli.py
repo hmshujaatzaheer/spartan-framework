@@ -1,4 +1,4 @@
-﻿"""
+"""
 Tests for CLI Module
 
 Comprehensive tests for command-line interface.
@@ -211,3 +211,6 @@ class TestConfigCommand:
         finally:
             if os.path.exists(temp_path):
                 os.unlink(temp_path)
+
+
+# Last updated: 2026-01-15

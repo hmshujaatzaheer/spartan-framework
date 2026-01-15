@@ -1,4 +1,4 @@
-﻿"""
+"""
 Final Coverage Tests - Targeting Exact Uncovered Lines
 
 Based on actual source code inspection. No fabrication.
@@ -170,3 +170,6 @@ class TestBenchmarkRunnerMain:
                         main()
                     except SystemExit:
                         pass  # argparse may exit
+
+
+# Last updated: 2026-01-15

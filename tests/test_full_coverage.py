@@ -1,4 +1,4 @@
-﻿"""
+"""
 Final Coverage Tests
 
 Tests to achieve 100% code coverage for all remaining uncovered lines.
@@ -512,3 +512,6 @@ class TestConfigFull:
         assert config.epsilon_min >= 0
         assert config.epsilon_max <= 1
         assert config.prm_threshold >= 0
+
+
+# Last updated: 2026-01-15

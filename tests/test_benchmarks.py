@@ -1,4 +1,4 @@
-﻿"""
+"""
 Tests for Benchmarks Module
 
 Comprehensive tests for BenchmarkRunner and DatasetLoader.
@@ -238,3 +238,6 @@ class TestBenchmarkRunner:
         assert len(result.attack_metrics) > 0
         assert len(result.defense_metrics) > 0
         assert len(result.timing_metrics) > 0
+
+
+# Last updated: 2026-01-15

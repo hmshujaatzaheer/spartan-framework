@@ -1,4 +1,4 @@
-﻿"""
+"""
 Additional Tests for Full Coverage
 
 Tests for edge cases and uncovered lines in existing modules.
@@ -429,3 +429,6 @@ class TestCoreEdgeCases:
         metrics = spartan.evaluate_defense(queries, labels)
         assert "auc_roc" in metrics
         assert "defense_rate" in metrics
+
+
+# Last updated: 2026-01-15

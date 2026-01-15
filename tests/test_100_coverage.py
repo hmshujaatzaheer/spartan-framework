@@ -743,3 +743,6 @@ class TestDistributionsCoverage:
         ce = cross_entropy(p, p)
         e = entropy(p)
         assert np.isclose(ce, e)
+
+
+# Last updated: 2026-01-15

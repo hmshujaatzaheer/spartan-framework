@@ -1,4 +1,4 @@
-﻿"""
+"""
 Final Push to 100% Coverage
 
 Targeting exact uncovered lines in sanitizer.py, vote_defense.py, mcts_defense.py
@@ -268,3 +268,6 @@ class TestMCTSDefenseUncovered:
 
         assert result["applied"] == True
         assert "best_node_index" in result["rerun_result"]
+
+
+# Last updated: 2026-01-15
